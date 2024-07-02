@@ -22,7 +22,8 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 #app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'static/uploads')
 
 # Use the path to your service account JSON file
-cred = credentials.Certificate(".\custom-closet-app-firebase-adminsdk-tetxw-78acf01b55.json")
+cred_path= os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 
 # Get a Firestore client
