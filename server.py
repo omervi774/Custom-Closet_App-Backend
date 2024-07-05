@@ -39,10 +39,14 @@ db = firestore.client()
 
 # Setup logging
 # Logging configuration
+# Logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', handlers=[
     logging.FileHandler("/home/aronott/app.log"),  # For PythonAnywhere
     logging.StreamHandler()
 ])
+
+# Initial log message to verify logging is working
+logging.info("Application started")
 @app.route('/pyament-success')
 def payment_success():
      return jsonify({"message": "Payment successful and order stored"}), 200
