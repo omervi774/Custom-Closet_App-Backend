@@ -55,6 +55,7 @@ def payment_error():
      return jsonify({"message": "Payment failed"}), 200
 @app.route('/payment-indicator', methods=['POST'])
 def payment_indicator():
+    logging.info('trigger indicator end point')
     data = request.form
     logging.info("Received data: %s", data)
     low_profile_code = data.get('LowProfileCode')
