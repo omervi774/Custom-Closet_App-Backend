@@ -53,7 +53,7 @@ def payment_indicator():
         logging.error("Missing LowProfileCode or OperationResponse")
         return jsonify({'status': 'error', 'message': 'Missing parameters'}), 400
     
-    if status == '0':  # Assuming '0' means payment was successful
+    if status == 0:  # Assuming '0' means payment was successful
         logging.info("Payment successful for LowProfileCode: %s", low_profile_code)
         try:
             # Query for the document with the given low_profile_code as orderId
