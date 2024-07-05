@@ -49,6 +49,10 @@ def payment_indicator():
     # Update order status in your database
     if status == '0':  # Assuming '0' means payment was successful
         print('paid')
+        db.collection('orders').document(low_profile_code).set({
+                'paid': True,
+                
+            })
         #update_order_status(low_profile_code, 'paid')
     else:
         print('failed')
