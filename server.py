@@ -39,9 +39,10 @@ db = firestore.client()
 
 # Setup logging
 # Logging configuration
+log_file_path = '/home/aronott/logs/flask_app.log'  # Adjust to your actual log file path on PythonAnywhere
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', handlers=[
-    logging.FileHandler("/home/aronott/app.log"),  # For PythonAnywhere
-    logging.StreamHandler()
+    logging.FileHandler(log_file_path),  # For PythonAnywhere
+    logging.StreamHandler()  # For local development
 ])
 
 @app.route('/payment-indicator', methods=['POST'])
@@ -64,11 +65,15 @@ def payment_indicator():
             orders_ref = db.collection('orders')
             query = orders_ref.where('orderId', '==', low_profile_code).stream()
 
-            # Update the paid status for the found document
+            doc_found = False
             for doc in query:
                 doc_ref = orders_ref.document(doc.id)
                 doc_ref.set({'paid': True}, merge=True)
-                logging.info("Database updated successfully for LowProfileCode: %s", low_profile_code)
+                logging.info("Database updated successfully for document ID: %s", doc.id)
+                doc_found = True
+
+            if not doc_found:
+                logging.warning("No document found for LowProfileCode: %s", low_profile_code)
 
         except Exception as e:
             logging.error("Failed to update database for LowProfileCode: %s, error: %s", low_profile_code, str(e))
