@@ -58,7 +58,7 @@ def payment_indicator():
     logging.info('trigger indicator end point')
     data = request.form
     logging.info("Received data: %s", data)
-    low_profile_code = request.args.get('LowProfileCode')
+    low_profile_code = request.args.get('lowprofilecode')
     status = request.args.get('OperationResponse')
 
     
