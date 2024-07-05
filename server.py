@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import json
 import re
 import os
+import requests
 
 import logging
 # Connect to openAI API
@@ -38,6 +39,22 @@ db = firestore.client()
 
 # Setup logging
 logging.basicConfig(level=logging.DEBUG)
+
+@app.route('/payment-indicator', methods=['POST'])
+def payment_indicator():
+    data = request.form
+    low_profile_code = data.get('LowProfileCode')
+    status = data.get('OperationResponse')
+    
+    # Update order status in your database
+    if status == '0':  # Assuming '0' means payment was successful
+        print('paid')
+        #update_order_status(low_profile_code, 'paid')
+    else:
+        print('failed')
+        #update_order_status(low_profile_code, 'failed')
+    
+    return jsonify({'status': 'ok'}), 200
 
 @app.post('/upload_img')
 def upload_file():
