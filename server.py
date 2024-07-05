@@ -43,20 +43,28 @@ logging.basicConfig(level=logging.DEBUG)
 @app.route('/payment-indicator', methods=['POST'])
 def payment_indicator():
     data = request.form
+    logging.info("Received data: %s", data)
     low_profile_code = data.get('LowProfileCode')
     status = data.get('OperationResponse')
+
+    logging.info("LowProfileCode: %s, OperationResponse: %s", low_profile_code, status)
+
+    if low_profile_code is None or status is None:
+        logging.error("Missing LowProfileCode or OperationResponse")
+        return jsonify({'status': 'error', 'message': 'Missing parameters'}), 400
     
-    # Update order status in your database
     if status == '0':  # Assuming '0' means payment was successful
-        print('paid')
-        db.collection('orders').document(low_profile_code).set({
+        logging.info("Payment successful for LowProfileCode: %s", low_profile_code)
+        try:
+            db.collection('orders').document(low_profile_code).set({
                 'paid': True,
-                
-            })
-        #update_order_status(low_profile_code, 'paid')
+            }, merge=True)
+            logging.info("Database updated successfully for LowProfileCode: %s", low_profile_code)
+        except Exception as e:
+            logging.error("Failed to update database for LowProfileCode: %s, error: %s", low_profile_code, str(e))
+            return jsonify({'status': 'error', 'message': 'Database update failed'}), 500
     else:
-        print('failed')
-        #update_order_status(low_profile_code, 'failed')
+        logging.warning("Payment failed for LowProfileCode: %s", low_profile_code)
     
     return jsonify({'status': 'ok'}), 200
 
