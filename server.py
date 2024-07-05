@@ -56,10 +56,16 @@ def payment_indicator():
     if status == '0':  # Assuming '0' means payment was successful
         logging.info("Payment successful for LowProfileCode: %s", low_profile_code)
         try:
-            db.collection('orders').document(low_profile_code).set({
-                'paid': True,
-            }, merge=True)
-            logging.info("Database updated successfully for LowProfileCode: %s", low_profile_code)
+            # Query for the document with the given low_profile_code as orderId
+            orders_ref = db.collection('orders')
+            query = orders_ref.where('orderId', '==', low_profile_code).stream()
+
+            # Update the paid status for the found document
+            for doc in query:
+                doc_ref = orders_ref.document(doc.id)
+                doc_ref.set({'paid': True}, merge=True)
+                logging.info("Database updated successfully for LowProfileCode: %s", low_profile_code)
+
         except Exception as e:
             logging.error("Failed to update database for LowProfileCode: %s, error: %s", low_profile_code, str(e))
             return jsonify({'status': 'error', 'message': 'Database update failed'}), 500
