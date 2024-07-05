@@ -39,18 +39,23 @@ db = firestore.client()
 
 # Setup logging
 # Logging configuration
-log_file_path = '/home/aronott/logs/flask_app.log'  # Adjust to your actual log file path on PythonAnywhere
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s', handlers=[
-    logging.FileHandler(log_file_path),  # For PythonAnywhere
-    logging.StreamHandler()  # For local development
+    logging.FileHandler("/home/aronott/app.log"),  # For PythonAnywhere
+    logging.StreamHandler()
 ])
-
+@app.route('/pyament-success')
+def payment_success():
+     return jsonify({"message": "Payment successful and order stored"}), 200
+@app.route('/pyament-error')
+def payment_error():
+     return jsonify({"message": "Payment failed"}), 200
 @app.route('/payment-indicator', methods=['POST'])
 def payment_indicator():
     data = request.form
     logging.info("Received data: %s", data)
     low_profile_code = data.get('LowProfileCode')
     status = data.get('OperationResponse')
+    
 
     logging.info("LowProfileCode: %s, OperationResponse: %s", low_profile_code, status)
 
@@ -58,7 +63,7 @@ def payment_indicator():
         logging.error("Missing LowProfileCode or OperationResponse")
         return jsonify({'status': 'error', 'message': 'Missing parameters'}), 400
     
-    if status == '0':  # Assuming '0' means payment was successful
+    if status == '0' or status == 0:  # Assuming '0' means payment was successful
         logging.info("Payment successful for LowProfileCode: %s", low_profile_code)
         try:
             # Query for the document with the given low_profile_code as orderId
@@ -74,6 +79,7 @@ def payment_indicator():
 
             if not doc_found:
                 logging.warning("No document found for LowProfileCode: %s", low_profile_code)
+                return jsonify({'status': 'error', 'message': 'o document found for LowProfileCode'}), 500
 
         except Exception as e:
             logging.error("Failed to update database for LowProfileCode: %s, error: %s", low_profile_code, str(e))
