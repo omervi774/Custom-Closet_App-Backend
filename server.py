@@ -53,7 +53,7 @@ def payment_success():
 @app.route('/pyament-error')
 def payment_error():
      return jsonify({"message": "Payment failed"}), 200
-@app.route('/payment-indicator', methods=['POST'])
+@app.route('/payment-indicator', methods=['GET'])
 def payment_indicator():
     logging.info('trigger indicator end point')
     data = request.form
