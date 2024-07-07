@@ -20,13 +20,15 @@ client = OpenAI(api_key=api_key)
 # app = Flask(__name__, static_folder='../../CUSTOM-CLOSET-APP/public')
 app = Flask(__name__)
 CORS(app)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = '/home/aronott/Custom-Closet_App-Backend/static/uploads/'
 #app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'static/uploads')
 
 # Use the path to your service account JSON file
 cred_path= os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
+
+serever_route = os.getenv('SERVER_ROUTE')
 
 # Get a Firestore client
 db = firestore.client()
@@ -151,9 +153,8 @@ def upload_file():
             'path': f'/static/uploads/{filename}'
         })
         
-        
-        
-        return jsonify({'msg': 'File uploaded!', 'file': f'http://localhost:5000//static/uploads/{filename}', 'id': doc_ref[1].id}), 200
+        # Update the return URL to reflect the actual server's URL
+        return jsonify({'msg': 'File uploaded!', 'file': f'https://aronott.pythonanywhere.com/static/uploads/{filename}', 'id': doc_ref[1].id}), 200
 
 
 
@@ -164,14 +165,15 @@ def test_get_images():
         images_ref = db.collection('uploads')
         docs = images_ref.stream()
         data = [{"id": doc.id, **doc.to_dict()} for doc in docs]
-        # print(data)
-        server_route = 'http://localhost:5000'
-        updated_data =[]
+        
+        server_route = 'https://aronott.pythonanywhere.com'
+        updated_data = []
         for item in data:
             if 'price' in item:
-                updated_data.append({"path": f'{server_route}{item["path"]}',"id":item['id'],"price":item['price']})
+                updated_data.append({"path": f'{server_route}{item["path"]}', "id": item['id'], "price": item['price']})
             else:
-                updated_data.append({"path": f'{server_route}{item["path"]}',"id":item['id']})
+                updated_data.append({"path": f'{server_route}{item["path"]}', "id": item['id']})
+                
         return jsonify({"data": updated_data})
         
     except Exception as e:
@@ -188,12 +190,12 @@ def update_price(document_id):
     collection_ref = db.collection("uploads")
     document_ref = collection_ref.document(document_id)
     document_ref.update(data)
-    print(document_ref.get().id)
-    print(document_ref.get()._data)
-    path = f'http://localhost:5000{document_ref.get()._data["path"]}'
-    price = document_ref.get()._data["price"]
-    print(path)
-    return jsonify({"id": document_ref.get().id,"path":path,"price":price}),200    
+    
+    doc = document_ref.get()
+    path = f'https://aronott.pythonanywhere.com{doc._data["path"]}'
+    price = doc._data["price"]
+    
+    return jsonify({"id": doc.id, "path": path, "price": price}), 200  
 
 @app.delete("/uploads/<document_id>")
 def delete_img(document_id):
@@ -212,7 +214,7 @@ def delete_img(document_id):
                 document_ref.delete()
                 print(f'{os.getcwd()}{file_path}')
                 full_path = f'{os.getcwd()}{file_path}'
-                print('full path:', full_path)
+                logging.info('full path:', full_path)
                 
                 # Delete the file from the filesystem
                 if os.path.exists(full_path):
