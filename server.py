@@ -321,14 +321,15 @@ def get_home_page_data():
     data = {}
     data['text_content'] = [{"id": doc.id, **doc.to_dict()} for doc in home_page_docs]
     data['images'] = []
-    server_route = 'http://localhost:5000'    
+    server_route = 'https://aronott.pythonanywhere.com'
     for item in img_data:
         if 'price' in item:
-            data['images'].append({"path": f'{server_route}{item["path"]}',"id":item['id'],"price":item['price']})
+            data['images'].append({"path": f'{server_route}{item["path"]}', "id": item['id'], "price": item['price']})
         else:
-            data['images'].append({"path": f'{server_route}{item["path"]}',"id":item['id']})
+            data['images'].append({"path": f'{server_route}{item["path"]}', "id": item['id']})
     
     return jsonify({"data": data})
+
 
 @app.put("/homePage/<document_id>")
 def update_home_page_field(document_id):
