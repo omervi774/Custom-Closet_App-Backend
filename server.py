@@ -86,7 +86,7 @@ def payment_indicator():
         encoded_params = urlencode(params)
         proxies = {
             'http': 'http://proxy.server:3128',
-            'https': 'https://proxy.server:3128' 
+            # 'https': 'https://proxy.server:3128' 
         }
         # Create the full URL with the encoded parameters
         cardcom_url = f'https://secure.cardcom.solutions/Interface/BillGoldGetLowProfileIndicator.aspx?{encoded_params}'
