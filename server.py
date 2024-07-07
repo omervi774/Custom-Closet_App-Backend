@@ -76,18 +76,17 @@ def payment_indicator():
         logging.info("Payment successful for LowProfileCode: %s", low_profile_code)
          # Set your parameters here
         params = {
+            'terminalnumber': '1000',  # Replace with your terminal number
+            'username': 'test2025',  # Replace with your username
             'lowprofilecode': low_profile_code,
             'codepage': '65001',  # Replace with the actual code page if different
-            'terminalnumber': '1000',  # Replace with your terminal number
-            'username': 'test2025'  # Replace with your username
         }
 
         # URL-encode the parameters
         encoded_params = urlencode(params)
-        proxies = {
-            'http': 'http://proxy.server:3128',
-            'https': 'https://proxy.server:3128' 
-        }
+        proxies ='http://proxy.server:3128',
+             
+        
         # Create the full URL with the encoded parameters
         cardcom_url = f'https://secure.cardcom.solutions/Interface/BillGoldGetLowProfileIndicator.aspx?{encoded_params}'
         try:
