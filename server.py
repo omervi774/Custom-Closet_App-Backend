@@ -203,19 +203,16 @@ def delete_img(document_id):
         collection_ref = db.collection("uploads")
         document_ref = collection_ref.document(document_id)
         doc = document_ref.get()
-        
+
         if doc.exists:
             file_path = doc.to_dict().get('path')
             if file_path:
-                # Ensure the file path is correctly constructed
-                full_path = os.path.join(os.getcwd(), file_path)
-                
+                # Construct the full path correctly using UPLOAD_FOLDER config
+                full_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(file_path))
+
                 # Delete the document from Firestore
                 document_ref.delete()
-                print(f'{os.getcwd()}{file_path}')
-                full_path = f'{os.getcwd()}{file_path}'
-                logging.info('full path:', full_path)
-                
+
                 # Delete the file from the filesystem
                 if os.path.exists(full_path):
                     os.remove(full_path)
@@ -228,6 +225,7 @@ def delete_img(document_id):
             return jsonify({'message': 'Document not found'}), 404
 
     except Exception as e:
+        logging.error(f"Error deleting document and file: {e}")
         return jsonify({'error': str(e)}), 500
 
 # @app.route('/uploads/<filename>')
