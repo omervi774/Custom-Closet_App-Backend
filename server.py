@@ -84,7 +84,11 @@ def payment_indicator():
 
         # URL-encode the parameters
         encoded_params = urlencode(params)
-        proxies ='http://proxy.server:3128',
+        proxies = {
+            'http': 'http://proxy.server:3128',
+            'https': 'http://proxy.server:3128'
+            
+        }
              
         
         # Create the full URL with the encoded parameters
