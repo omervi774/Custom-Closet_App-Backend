@@ -8,6 +8,7 @@ import json
 import re
 import os
 import requests
+from urllib.parse import urlencode
 
 import logging
 # Connect to openAI API
@@ -53,6 +54,7 @@ def payment_success():
 @app.route('/pyament-error')
 def payment_error():
      return jsonify({"message": "Payment failed"}), 200
+
 @app.route('/payment-indicator', methods=['GET'])
 def payment_indicator():
     logging.info('trigger indicator end point')
@@ -71,7 +73,31 @@ def payment_indicator():
     
     if status == '0' or status == 0:  # Assuming '0' means payment was successful
         logging.info("Payment successful for LowProfileCode: %s", low_profile_code)
+         # Set your parameters here
+        params = {
+            'lowprofilecode': low_profile_code,
+            'codepage': '65001',  # Replace with the actual code page if different
+            'terminalnumber': '1000',  # Replace with your terminal number
+            'username': 'test2025'  # Replace with your username
+        }
+
+        # URL-encode the parameters
+        encoded_params = urlencode(params)
+
+        # Create the full URL with the encoded parameters
+        cardcom_url = f'https://secure.cardcom.solutions/Interface/BillGoldGetLowProfileIndicator.aspx?{encoded_params}'
         try:
+             # Perform the GET request
+            response = requests.get(cardcom_url)
+            response_data = response.json()
+
+            # Check the response status
+            if response.status_code == 200:
+                logging.info("Received data from Cardcom: %s", response_data)
+                # Handle the response data as needed
+            else:
+                logging.error("Failed to get data from Cardcom, status code: %d", response.status_code)
+                return jsonify({'status': 'error', 'message': 'Failed to get data from Cardcom'}), 500
             # Query for the document with the given low_profile_code as orderId
             orders_ref = db.collection('orders')
             query = orders_ref.where('orderId', '==', low_profile_code).stream()
