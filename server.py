@@ -46,6 +46,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(mess
     logging.StreamHandler()
 ])
 
+
 # Initial log message to verify logging is working
 logging.info("Application started")
 @app.route('/pyament-success')
@@ -85,18 +86,23 @@ def payment_indicator():
         encoded_params = urlencode(params)
         proxies = {
             'http': 'http://proxy.server:3128',
-            'https': 'http://proxy.server:3128'
+            'https': 'https://proxy.server:3128' 
         }
         # Create the full URL with the encoded parameters
         cardcom_url = f'https://secure.cardcom.solutions/Interface/BillGoldGetLowProfileIndicator.aspx?{encoded_params}'
         try:
              # Perform the GET request
-            response = requests.get(cardcom_url,proxies=proxies)
-            response_data = response.json()
+            # response = requests.get(cardcom_url,proxies=proxies)
+            # response_data = response.json()
+            logging.info("Sending GET request to CardCom API...")
+            response = requests.get(cardcom_url, proxies=proxies)
+            response.raise_for_status()  # Raise an HTTPError for bad responses
+            logging.info("Received response from CardCom API: %s", response.text)
 
             # Check the response status
             if response.status_code == 200:
-                logging.info("Received data from Cardcom: %s", response_data)
+                logging.info("successfull GET request to cardcom api ")
+                # logging.info("Received data from Cardcom: %s", response_data)
                 # Handle the response data as needed
             else:
                 logging.error("Failed to get data from Cardcom, status code: %d", response.status_code)
