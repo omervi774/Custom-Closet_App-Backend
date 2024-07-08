@@ -66,52 +66,17 @@ def payment_indicator():
     low_profile_code = request.args.get('lowprofilecode')
     status = request.args.get('OperationResponse')
 
-    
+
 
     logging.info("LowProfileCode: %s, OperationResponse: %s", low_profile_code, status)
 
     if low_profile_code is None or status is None:
         logging.error("Missing LowProfileCode or OperationResponse")
         return jsonify({'status': 'error', 'message': 'Missing parameters'}), 400
-    
+
     if status == '0' or status == 0:  # Assuming '0' means payment was successful
         logging.info("Payment successful for LowProfileCode: %s", low_profile_code)
-         # Set your parameters here
-        params = {
-            'terminalnumber': '1000',  # Replace with your terminal number
-            'username': 'test2025',  # Replace with your username
-            'lowprofilecode': low_profile_code,
-            'codepage': '65001',  # Replace with the actual code page if different
-        }
-
-        # URL-encode the parameters
-        encoded_params = urlencode(params)
-        proxies = {
-            'http': 'http://proxy.server:3128',
-            'https': 'http://proxy.server:3128'
-            
-        }
-             
-        
-        # Create the full URL with the encoded parameters
-        cardcom_url = f'https://secure.cardcom.solutions/Interface/BillGoldGetLowProfileIndicator.aspx?{encoded_params}'
         try:
-             # Perform the GET request
-            # response = requests.get(cardcom_url,proxies=proxies)
-            # response_data = response.json()
-            logging.info("Sending GET request to CardCom API...")
-            response = requests.get(cardcom_url, proxies=proxies)
-            response.raise_for_status()  # Raise an HTTPError for bad responses
-            logging.info("Received response from CardCom API: %s", response.text)
-
-            # Check the response status
-            if response.status_code == 200:
-                logging.info("successfull GET request to cardcom api ")
-                # logging.info("Received data from Cardcom: %s", response_data)
-                # Handle the response data as needed
-            else:
-                logging.error("Failed to get data from Cardcom, status code: %d", response.status_code)
-                return jsonify({'status': 'error', 'message': 'Failed to get data from Cardcom'}), 500
             # Query for the document with the given low_profile_code as orderId
             orders_ref = db.collection('orders')
             query = orders_ref.where('orderId', '==', low_profile_code).stream()
@@ -132,7 +97,7 @@ def payment_indicator():
             return jsonify({'status': 'error', 'message': 'Database update failed'}), 500
     else:
         logging.warning("Payment failed for LowProfileCode: %s", low_profile_code)
-    
+
     return jsonify({'status': 'ok'}), 200
 
 @app.post('/upload_img')
@@ -152,7 +117,7 @@ def upload_file():
         doc_ref = collection_ref.add({
             'path': f'/static/uploads/{filename}'
         })
-        
+
         # Update the return URL to reflect the actual server's URL
         return jsonify({'msg': 'File uploaded!', 'file': f'{server_route}/static/uploads/{filename}', 'id': doc_ref[1].id}), 200
 
@@ -171,9 +136,9 @@ def test_get_images():
                 updated_data.append({"path": f'{server_route}{item["path"]}', "id": item['id'], "price": item['price']})
             else:
                 updated_data.append({"path": f'{server_route}{item["path"]}', "id": item['id']})
-                
+
         return jsonify({"data": updated_data})
-        
+
     except Exception as e:
         logging.error(f"Error fetching images: {e}")
         return jsonify({'msg': 'Error fetching images'}), 500
@@ -188,12 +153,12 @@ def update_price(document_id):
     collection_ref = db.collection("uploads")
     document_ref = collection_ref.document(document_id)
     document_ref.update(data)
-    
+
     doc = document_ref.get()
     path = f'{server_route}{doc._data["path"]}'
     price = doc._data["price"]
-    
-    return jsonify({"id": doc.id, "path": path, "price": price}), 200  
+
+    return jsonify({"id": doc.id, "path": path, "price": price}), 200
 
 @app.delete("/uploads/<document_id>")
 def delete_img(document_id):
@@ -229,7 +194,7 @@ def delete_img(document_id):
 # @app.route('/uploads/<filename>')
 # def uploaded_file(filename):
 #     logging.debug(f"Received request for file {filename}")
-#     return send_from_directory(app.config['UPLOAD_FOLDER'], filename) 
+#     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route("/")
 
@@ -253,7 +218,7 @@ def get_stock_by_name(name):
         collection_ref = db.collection("stocks")
         query_ref = collection_ref.where('name', '==', name).stream()
         results = [{"id": doc.id, **doc.to_dict()} for doc in query_ref]
-        
+
         if results:
             return jsonify({"data": results}), 200
         else:
@@ -296,8 +261,8 @@ def add_new_order():
 @app.route("/orders")
 def get_orders():
     collection_ref = db.collection("orders")
-    docs = collection_ref.stream()
-    data = [{"id": doc.id, **doc.to_dict()} for doc in docs]
+    query = collection_ref.where('paid', '==', True).stream()
+    data = [{"id": doc.id, **doc.to_dict()} for doc in query]
     return jsonify({"data": data})
 
 @app.delete("/orders/<document_id>")
@@ -322,7 +287,7 @@ def get_home_page_data():
             data['images'].append({"path": f'{server_route}{item["path"]}', "id": item['id'], "price": item['price']})
         else:
             data['images'].append({"path": f'{server_route}{item["path"]}', "id": item['id']})
-    
+
     return jsonify({"data": data})
 
 
@@ -336,7 +301,6 @@ def update_home_page_field(document_id):
     print(document_ref.get()._data)
     return jsonify({"id": document_ref.get().id,**document_ref.get()._data}),200
 
-# AI chatbot
 @app.post("/ai")
 def chat():
     user_message = request.json.get("text")
@@ -345,12 +309,12 @@ def chat():
         {
             "role": "system",
             "content": """You help a cabinet design company. The company's cabinets are built from rectangular "cells" of different sizes. The user will provide you with the size of the closet he wants and you have to design a beautiful and special closet for him (according to the sizes that the user gave you) according to the following rules: Your answer should always be in dictionary (python) format, don't add any additional text,
-                        Please provide the cabinet design specifications in the following format: {0: [{position: [x1, y1, z], size: [x1_length, y1_hight]}, {position: [x2, y2, z], size: [x2_length, y2_hight]} ...], 1: [{position: [x1, y1, z], size: [x1_length, y1_hight]}, {position: [x2, y2, z], size: [x2_length, y2_hight]} ...], ...}, 
+                        Please provide the cabinet design specifications in the following format: {0: [{position: [x1, y1, z], size: [x1_length, y1_hight]}, {position: [x2, y2, z], size: [x2_length, y2_hight]} ...], 1: [{position: [x1, y1, z], size: [x1_length, y1_hight]}, {position: [x2, y2, z], size: [x2_length, y2_hight]} ...], ...},
                         where each key represents a layer (floor in the closet) and the value is this: the "position" key is a list of coordinates representing the position of the CENTER of the cube in that layer and the "size" key represent the width and the hight of each cube.
-                        The Z coordinate is always 0! The position of the center of the first cube at key 0 must be [0, 0, 0]. The cabinets consist of "parts" in sizes 1 meters, 2 meter and 3 meters.
-                        The "y_hight" value of each cube must be 1. Therfore, the "size" key will always be [x_length, 1] and the "y" value of the "position" key will always be same as the layer number.
-                        For example: Let's say the sizes the user gave us are 3 meters high and 4 meters wide, an example of a valid response is: {0: [{position: [0, 0, 0], size: [1, 1]}, {position: [1.5, 0, 0], size: [2, 1]}, {position: [3, 0, 0], size: [1, 1]}], 1: [{position: [0.5, 1, 0], size: [2, 1]}, {position: [2.5, 1, 0], size: [2, 1]}], 2: [{position: [0, 2, 0], size: [1, 1]}, {position: [1, 2, 0], size: [1, 1]}]}. 
-                        This is another example: Let's say the sizes the user gave us are 4 meters high and 3 meters wide: {0: [{position: [0, 0, 0], size: [1, 1]}, {position: [1.5, 0, 0], size: [2, 1]}], 1: [{position: [0, 1, 0], size: [1, 1]}, {position: [1, 1, 0], size: [1, 1]}, {position: [2, 1, 0], size: [1, 1]}], 2: [{position: [0, 2, 0], size: [1, 1]}], 3: [{position: [0, 3, 0], size: [1, 1]}]}. This is just an example, be creative!
+                        The Z coordinate is always 0! The position of the center of the first cube at key 0 must be [0, -1, 0]. The cabinets consist of "parts" in sizes 1 meters, 2 meter and 3 meters.
+                        The "y_hight" value of each cube must be 1. Therfore, the "size" key will always be [x_length, 1] and the "y" value of the "position" key will always be the layer number minus 1.
+                        For example: Let's say the sizes the user gave us are 3 meters high and 4 meters wide, an example of a valid response is: {0: [{position: [0, -1, 0], size: [1, 1]}, {position: [1.5, -1, 0], size: [2, 1]}, {position: [3, -1, 0], size: [1, 1]}], 1: [{position: [0.5, 0, 0], size: [2, 1]}, {position: [2.5, 0, 0], size: [2, 1]}], 2: [{position: [0, 1, 0], size: [1, 1]}, {position: [1, 1, 0], size: [1, 1]}]}.
+                        This is another example: Let's say the sizes the user gave us are 4 meters high and 3 meters wide: {0: [{position: [0, -1, 0], size: [1, 1]}, {position: [1.5, -1, 0], size: [2, 1]}], 1: [{position: [0, 0, 0], size: [1, 1]}, {position: [1, 0, 0], size: [1, 1]}, {position: [2, 0, 0], size: [1, 1]}], 2: [{position: [0, 1, 0], size: [1, 1]}], 3: [{position: [0, 2, 0], size: [1, 1]}]}. This is just an example, be creative!
                         The example above is a valid response because the number of cells in each layer is different and the x-positions of cells are different across layers. In addition, the x-positions and the y-positions of cells are calculated correctly and the size of the cabinet is 3x4 meters.
                         The cabinet must contain at least 2 layers. Be creative but always follow the rules!
                         The calculation for the center of a new cube in x position is as following:
@@ -360,21 +324,25 @@ def chat():
     ]
 
     def is_creative_response(design):
-        layer_count = len(design)
-        if layer_count < 2:
-            return False  
+        try:
+            layer_count = len(design)
+            if layer_count < 2:
+                return False
 
-        # Get the number of cells in each layer
-        cell_counts = [len(design[layer]) for layer in design]
+            # Get the number of cells in each layer
+            cell_counts = [len(design[layer]) for layer in design]
 
-        # Check if the number of cells in each layer is the same
-        if len(set(cell_counts)) == 1:
-            # Check x-positions
-            for i in range(cell_counts[0]):
-                x_positions = [abs(design[layer][i]['position'][0]) for layer in design if i < len(design[layer])]
-                if len(set(x_positions)) == 1:
-                    return False  # Non-creative as x-positions match
-        return True  # Design is creative
+            # Check if the number of cells in each layer is the same
+            if len(set(cell_counts)) == 1:
+                # Check x-positions
+                for i in range(cell_counts[0]):
+                    x_positions = [abs(design[layer][i]['position'][0]) for layer in design if i < len(design[layer])]
+                    if len(set(x_positions)) == 1:
+                        return False  # Non-creative as x-positions match
+            return True  # Design is creative
+        except Exception as e:
+            print(f"Error in is_creative_response: {e}")
+            return False
 
     def extract_dictionary(response):
         try:
@@ -402,36 +370,54 @@ def chat():
             data = extract_dictionary(response)
             if data is None:
                 return None
-            
+            first_cube_size = 0
+
             # Iterate through each layer
             for layer_key, cells in data.items():
                 # Ensure cells is a list
                 if not isinstance(cells, list):
                     continue
-                
+
                 # Iterate through each cell in the layer
                 for i in range(len(cells)):
+                    # Ensure size is valid
+                    x_length = cells[i]['size'][0]
+                    if x_length not in [1, 2, 3]:
+                        print(f"Invalid x_length!")
+                        if x_length < 1:
+                            x_length = 1
+                        elif x_length < 2:
+                            x_length = 1
+                        elif x_length < 3:
+                            x_length = 2
+                        else:
+                            x_length = 3
+                        cells[i]['size'][0] = x_length
+
                     if i == 0 and int(layer_key) == 0:
                         # First cell's x position should be 0
                         cells[i]['position'][0] = 0
+                        first_cube_size = cells[i]['size'][0]
                     elif i == 0:
-                        continue
+                        needed_x = 0 - first_cube_size /2 + (cells[i]['size'][0] / 2)
+                        if cells[i]['position'][0] != needed_x:
+                            cells[i]['position'][0] = needed_x
                     else:
                         # Calculate the correct x position for the current cell
                         prev_cell = cells[i - 1]
                         prev_x = prev_cell['position'][0]
                         prev_x_length = prev_cell['size'][0]
                         current_x_length = cells[i]['size'][0]
-                        
+
                         expected_x = prev_x + (prev_x_length / 2) + (current_x_length / 2)
-                        
+
                         # Check and correct the x position
                         if cells[i]['position'][0] != expected_x:
                             cells[i]['position'][0] = expected_x
-            
+
             # Return the modified data
             return data
-        
+
         except Exception as e:
             print(f"Error: {e}")
             return None
@@ -454,18 +440,17 @@ def chat():
                 cube['display'] = True
         return cubes
 
+    # Send the user message to the ChatGPT model שמג get a response
     chat = client.chat.completions.create(
         model="gpt-4", messages=messages
     )
     reply = chat.choices[0].message.content
-    print(f"ChatGPT: {reply}")
 
     # Extract and clean the response to get only the dictionary
     cleaned_reply = extract_dictionary(reply)
-    print(f"Cleaned Reply: {cleaned_reply}")  # Added print statement
 
     if cleaned_reply is None:
-        return jsonify({"text": "The response was not in a valid format."})
+        return jsonify({"text": "תשובתך לא הייתה בפורמט הנכון, רענן את הדף ונסה שוב בבקשה."})
 
     # Check if the initial response is creative
     if not is_creative_response(cleaned_reply):
@@ -477,22 +462,13 @@ def chat():
 
     # Correct the x positions
     corrected_reply = correct_x_positions(json.dumps(cleaned_reply))
-    print(f"Corrected response: {corrected_reply}")
 
     if corrected_reply is None:
-        return jsonify({"text": "The response was not in a valid format."})
-
-    if not is_creative_response(corrected_reply):
-        messages.append({
-            "role": "assistant",
-            "content": "There was an issue with your response. Please ensure that the design is creative. The number of cells in each layer should not be the same and the x-positions of cells should be different across layers."
-        })
-        return jsonify({"text": "The response was not creative enough. Please try again."})
+        return jsonify({"text": "תשובתך לא הייתה בפורמט הנכון, רענן את הדף ונסה שוב בבקשה."})
 
     messages.append({"role": "assistant", "content": json.dumps(corrected_reply, indent=4)})
     corrected_reply = {int(key): value for key, value in corrected_reply.items()}
     corrected_reply = handle_offset_adding(corrected_reply)
-    print('Modified keys dict:', corrected_reply)
     return jsonify({"text": corrected_reply})
 
 if __name__ == "__main__":
