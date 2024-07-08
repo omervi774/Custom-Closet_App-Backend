@@ -28,7 +28,7 @@ cred_path= os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 
-serever_route = os.getenv('SERVER_ROUTE')
+server_route = os.getenv('SERVER_ROUTE')
 
 # Get a Firestore client
 db = firestore.client()
@@ -154,7 +154,7 @@ def upload_file():
         })
         
         # Update the return URL to reflect the actual server's URL
-        return jsonify({'msg': 'File uploaded!', 'file': f'https://aronott.pythonanywhere.com/static/uploads/{filename}', 'id': doc_ref[1].id}), 200
+        return jsonify({'msg': 'File uploaded!', 'file': f'{server_route}/static/uploads/{filename}', 'id': doc_ref[1].id}), 200
 
 
 
@@ -165,8 +165,6 @@ def test_get_images():
         images_ref = db.collection('uploads')
         docs = images_ref.stream()
         data = [{"id": doc.id, **doc.to_dict()} for doc in docs]
-        
-        server_route = 'https://aronott.pythonanywhere.com'
         updated_data = []
         for item in data:
             if 'price' in item:
@@ -192,7 +190,7 @@ def update_price(document_id):
     document_ref.update(data)
     
     doc = document_ref.get()
-    path = f'https://aronott.pythonanywhere.com{doc._data["path"]}'
+    path = f'{server_route}{doc._data["path"]}'
     price = doc._data["price"]
     
     return jsonify({"id": doc.id, "path": path, "price": price}), 200  
@@ -319,7 +317,6 @@ def get_home_page_data():
     data = {}
     data['text_content'] = [{"id": doc.id, **doc.to_dict()} for doc in home_page_docs]
     data['images'] = []
-    server_route = 'https://aronott.pythonanywhere.com'
     for item in img_data:
         if 'price' in item:
             data['images'].append({"path": f'{server_route}{item["path"]}', "id": item['id'], "price": item['price']})
