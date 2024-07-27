@@ -12,23 +12,26 @@ This is the backend server for the Custom Closet App, built with Flask.
 # Installation
 
 1. Clone the repository:
+
    git clone https://github.com/omervi774/Custom-Closet_App-Backend.git
 
    cd Custom-Closet_App-Backend
 
 2. Create a virtual environment:
+
    python3 -m venv venv
 
    source venv/bin/activate # On Windows use `venv\Scripts\activate`
 
 3. Install the required dependencies:
+
    pip install -r requirements.txt
 
 # Running the Server
 
-1. Ensure all environment variables are set.
+1. Ensure all environment variables are set.For the exact variables needed
 
-For the exact variables needed please contact omervainbrand2@gmail.com.
+   please contact omervainbrand2@gmail.com.
 
 2. Run the Flask server:
 
