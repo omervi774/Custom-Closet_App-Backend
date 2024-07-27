@@ -66,8 +66,6 @@ def payment_indicator():
     low_profile_code = request.args.get('lowprofilecode')
     status = request.args.get('OperationResponse')
 
-
-
     logging.info("LowProfileCode: %s, OperationResponse: %s", low_profile_code, status)
 
     if low_profile_code is None or status is None:
@@ -80,17 +78,75 @@ def payment_indicator():
             # Query for the document with the given low_profile_code as orderId
             orders_ref = db.collection('orders')
             query = orders_ref.where('orderId', '==', low_profile_code).stream()
-
+            stocks_ref = db.collection('stocks')
+            join_3_exists_ref = stocks_ref.where('name', '==', 'מחבר 3 יציאות').stream()
+            join_4_exists_ref = stocks_ref.where('name', '==', 'מחבר 4 יציאות').stream()
+            join_5_exists_ref = stocks_ref.where('name', '==', 'מחבר 5 יציאות').stream()
+            glass_shelf_ref = stocks_ref.where('name', '==', 'מדף זכוכית').stream()
+            wood_shelf_ref = stocks_ref.where('name', '==', 'מדף עץ').stream()
+            metal_shelf_ref = stocks_ref.where('name', '==', 'מדף מתכת').stream()
+            bars_ref = stocks_ref.where('name', '==', 'מוטות ברזל').stream()
             doc_found = False
+
             for doc in query:
                 doc_ref = orders_ref.document(doc.id)
                 doc_ref.set({'paid': True}, merge=True)
                 logging.info("Database updated successfully for document ID: %s", doc.id)
                 doc_found = True
+                doc_snapshot = doc_ref.get()
+
+                if doc_snapshot.exists:
+                    doc_data = doc_snapshot.to_dict()
+                    joins_3_exists = doc_data.get('joins3Exists')
+                    joins_4_exists = doc_data.get('joins4Exists')
+                    joins_5_exists = doc_data.get('joins5Exists')
+                    bars = doc_data.get('bars')
+                    shelfs = doc_data.get('shelfs')
+                    wood_shelf = 0
+                    glass_shelf = 0
+                    metal_shelf = 0
+                    for shelf in shelfs:
+                        if shelf['shelfColor'] == 'glass':
+                            glass_shelf +=1
+
+                        elif  shelf['shelfColor'] == 'wood':
+                            wood_shelf +=1
+
+                        else:
+                            metal_shelf +=1
+
+
+                    join_3_exists_data = next(join_3_exists_ref)
+                    join_4_exists_data = next(join_4_exists_ref)
+                    join_5_exists_data = next(join_5_exists_ref)
+                    glass_shelf_data = next(glass_shelf_ref)
+                    wood_shelf_data = next(wood_shelf_ref)
+                    metal_shelf_data = next(metal_shelf_ref)
+                    bars_data = next(bars_ref)
+
+                    updated_joins_3_exists = int(join_3_exists_data.to_dict().get('quantity')) - joins_3_exists
+                    updated_joins_4_exists = int(join_4_exists_data.to_dict().get('quantity')) - joins_4_exists
+                    updated_joins_5_exists = int(join_5_exists_data.to_dict().get('quantity')) - joins_5_exists
+                    updated_glass_shelf = int(glass_shelf_data.to_dict().get('quantity')) - glass_shelf
+                    updated_wood_shelf = int(wood_shelf_data.to_dict().get('quantity')) - wood_shelf
+                    updated_metal_shelf = int(metal_shelf_data.to_dict().get('quantity')) - metal_shelf
+                    updated_bars = int(bars_data.to_dict().get('quantity')) - bars
+
+                    join_3_exists_data.reference.set({'quantity': str(updated_joins_3_exists)}, merge=True)
+                    join_4_exists_data.reference.set({'quantity': str(updated_joins_4_exists)}, merge=True)
+                    join_5_exists_data.reference.set({'quantity': str(updated_joins_5_exists)}, merge=True)
+                    glass_shelf_data.reference.set({'quantity': str(updated_glass_shelf)}, merge=True)
+                    wood_shelf_data.reference.set({'quantity': str(updated_wood_shelf)}, merge=True)
+                    metal_shelf_data.reference.set({'quantity': str(updated_metal_shelf)}, merge=True)
+                    bars_data.reference.set({'quantity': str(updated_bars)}, merge=True)
+
+                    logging.info("joins3Exists: %s", joins_3_exists)
+                else:
+                    logging.warning("Document with ID %s does not exist", doc.id)
 
             if not doc_found:
                 logging.warning("No document found for LowProfileCode: %s", low_profile_code)
-                return jsonify({'status': 'error', 'message': 'o document found for LowProfileCode'}), 500
+                return jsonify({'status': 'error', 'message': 'No document found for LowProfileCode'}), 500
 
         except Exception as e:
             logging.error("Failed to update database for LowProfileCode: %s, error: %s", low_profile_code, str(e))
@@ -99,6 +155,7 @@ def payment_indicator():
         logging.warning("Payment failed for LowProfileCode: %s", low_profile_code)
 
     return jsonify({'status': 'ok'}), 200
+
 
 @app.post('/upload_img')
 def upload_file():
