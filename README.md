@@ -35,11 +35,11 @@ This is the backend server for the Custom Closet App, built with Flask.
 
 2. Run the Flask server:
 
-export FLASK_APP=server.py
+   export FLASK_APP=server.py
 
-export FLASK_ENV=development # Optional: For development environment
+   export FLASK_ENV=development # Optional: For development environment
 
-flask run
+   flask run
 
 On Windows, use set instead of export:
 
