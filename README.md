@@ -41,14 +41,14 @@ This is the backend server for the Custom Closet App, built with Flask.
 
    flask run
 
-On Windows, use set instead of export:
+   On Windows, use set instead of export:
 
-set FLASK_APP=server.py
+   set FLASK_APP=server.py
 
-set FLASK_ENV=development
+   set FLASK_ENV=development
 
-flask run
+   flask run
 
-The server should now be running locally at http://127.0.0.1:5000/.
+   The server should now be running locally at http://127.0.0.1:5000/.
 
-For any inquiries, please reach out to omervainbrand2@gmail.com.
+   For any inquiries, please reach out to omervainbrand2@gmail.com.
