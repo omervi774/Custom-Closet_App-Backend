@@ -373,7 +373,7 @@ def chat():
                         For example: Let's say the sizes the user gave us are 3 meters high and 4 meters wide, an example of a valid response is: {0: [{position: [0, -1, 0], size: [1, 1]}, {position: [1.5, -1, 0], size: [2, 1]}, {position: [3, -1, 0], size: [1, 1]}], 1: [{position: [0.5, 0, 0], size: [2, 1]}, {position: [2.5, 0, 0], size: [2, 1]}], 2: [{position: [0, 1, 0], size: [1, 1]}, {position: [1, 1, 0], size: [1, 1]}]}.
                         This is another example: Let's say the sizes the user gave us are 4 meters high and 3 meters wide: {0: [{position: [0, -1, 0], size: [1, 1]}, {position: [1.5, -1, 0], size: [2, 1]}], 1: [{position: [0, 0, 0], size: [1, 1]}, {position: [1, 0, 0], size: [1, 1]}, {position: [2, 0, 0], size: [1, 1]}], 2: [{position: [0, 1, 0], size: [1, 1]}], 3: [{position: [0, 2, 0], size: [1, 1]}]}. This is just an example, be creative!
                         The example above is a valid response because the number of cells in each layer is different and the x-positions of cells are different across layers. In addition, the x-positions and the y-positions of cells are calculated correctly and the size of the cabinet is 3x4 meters.
-                        The cabinet must contain at least 2 layers. Be creative but always follow the rules!
+                        The cabinet must contain at least 2 layers. please make sure that each layer's width will not exceed the user input width. Be creative but always follow the rules!
                         The calculation for the center of a new cube in x position is as following:
                         Take the x position value of the cube that you are connected to, add the x_length value from the "size" of the cube that you are connected divided by 2 and then add the new cube x_length divided by 2. Your answer should always be in dictionary (python) format, don't add any additional text, just the dictionary."""
         },
@@ -508,6 +508,8 @@ def chat():
 
     if cleaned_reply is None:
         return jsonify({"text": "תשובתך לא הייתה בפורמט הנכון, רענן את הדף ונסה שוב בבקשה."})
+    logging.info("First element of cleaned_reply[0]: %s", cleaned_reply[0][0])
+    
 
     # Check if the initial response is creative
     if not is_creative_response(cleaned_reply):
