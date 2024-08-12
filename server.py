@@ -508,7 +508,9 @@ def chat():
 
     if cleaned_reply is None:
         return jsonify({"text": "תשובתך לא הייתה בפורמט הנכון, רענן את הדף ונסה שוב בבקשה."})
-    logging.info("First element of cleaned_reply[0]: %s", cleaned_reply[0][0])
+    if type(cleaned_reply['0']) is not list: 
+        return jsonify({"text": "הייתה בעיה בחישוב הארון. אנא נסה שוב"})
+
     
 
     # Check if the initial response is creative
